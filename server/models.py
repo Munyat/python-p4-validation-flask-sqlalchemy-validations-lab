@@ -11,7 +11,23 @@ class Author(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # Add validators 
+    @validates('name')
+    def validate_name(self, key, name):
+        existing_author = Author.query.filter_by(name=name).first()
+        if not name:
+            raise ValueError("Name cannot be empty")
+        
+        if existing_author:
+            raise ValueError(f"Author with name '{name}' already exists.")
+
+
+        return name
+
+    @validates('phone_number')
+    def validate_phone_number(self, key, phone_number):
+        if not phone_number.isdigit() or len(phone_number) != 10:
+            raise ValueError("Phone number must be exactly 10 digits")
+        return phone_number
 
     def __repr__(self):
         return f'Author(id={self.id}, name={self.name})'
@@ -27,7 +43,39 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    # Add validators  
+    # Add validators 
+    @validates('content')
+    def validates_content(self, key, content):
+        if len(content) < 250 :
+            raise ValueError("Content should be at least 250 characters")
+        
+        return content
+    
+    @validates('summary')
+    def validates_summary(self, key, summary):
+        if len(summary) > 250:
+            raise ValueError("Summary should have a maximum of 250 characters")
+        
+        return summary
+    
+    @validates('category')
+    def validates_category(self, key, category):
+        if category not in ["Fiction", "Non-Fiction"]:
+            raise ValueError("Only Fiction and Non-Fiction allowed")
+        
+        return category
+    
+    @validates('title')
+    def validates_title(self, key, title):
+
+        if not title:
+            raise ValueError("Title cannot be empty")
+        
+        words = ["Won't Believe","Secret","Top","Guess"]
+        if any(word in title for word in words):
+            return title
+        
+        raise ValueError("use a click bait-y word")
 
 
     def __repr__(self):
